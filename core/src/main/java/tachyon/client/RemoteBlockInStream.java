@@ -1,15 +1,22 @@
 package tachyon.client;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.List;
 
+import org.apache.hadoop.util.HeapSort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.mellanox.jxio.jxioConnection.JxioConnection;
 
 import tachyon.Constants;
 import tachyon.UnderFileSystem;
@@ -18,6 +25,7 @@ import tachyon.thrift.ClientBlockInfo;
 import tachyon.thrift.NetAddress;
 import tachyon.util.CommonUtils;
 import tachyon.util.NetworkUtils;
+import tachyon.worker.jxio.JxioConstants;
 import tachyon.worker.nio.DataServerMessage;
 
 /**
@@ -217,18 +225,26 @@ public class RemoteBlockInStream extends BlockInStream {
         LOG.info(host + ":" + port + " current host is " + NetworkUtils.getLocalHostName() + " "
             + NetworkUtils.getLocalIpAddress());
 
-        try {
-          buf =
-              retrieveByteBufferFromRemoteMachine(new InetSocketAddress(host, port),
-                  blockInfo.blockId, offset, len);
-          if (buf != null) {
-            break;
-          }
-        } catch (IOException e) {
-          LOG.error("Fail to retrieve byte buffer for block " + blockInfo.blockId + " from remote "
-              + host + ":" + port + " with offset " + offset + " and length " + len, e);
-          buf = null;
-        }
+		try {
+			if (UserConf.get().USE_RDMA) {
+				buf = retrieveByteBufferFromRemoteMachineRDMA(
+						new InetSocketAddress(host, port),
+						blockInfo.blockId, offset, len);
+			} else {
+				buf = retrieveByteBufferFromRemoteMachine(
+						new InetSocketAddress(host, port),
+						blockInfo.blockId, offset, len);
+			}
+			if (buf != null) {
+				break;
+			}
+		} catch (IOException e) {
+			LOG.error("Fail to retrieve byte buffer for block "
+					+ blockInfo.blockId + " from remote " + host + ":"
+					+ port + " with offset " + offset + " and length "
+					+ len, e);
+			buf = null;
+		}
       }
     } catch (IOException e) {
       LOG.error("Failed to get read data from remote ", e);
@@ -276,6 +292,37 @@ public class RemoteBlockInStream extends BlockInStream {
       socketChannel.close();
     }
   }
+  
+	private ByteBuffer retrieveByteBufferFromRemoteMachineRDMA(
+			InetSocketAddress address, long blockId, long offset, long length)
+			throws IOException {
+		String uriString = String.format("rdma://%s:%s/data?%s=%s&%s=%s&%s=%s",
+				address.getAddress().getHostAddress(), address.getPort(),
+				JxioConstants.NAME_BLOCK_ID, blockId,
+				JxioConstants.NAME_LENGTH, length, JxioConstants.NAME_OFFSET,
+				offset);
+		LOG.info("Requesting data from " + uriString);
+		JxioConnection connection=null;
+		try {
+			URI uri = new URI(uriString);
+			connection = new JxioConnection(uri);
+			InputStream is = connection.getInputStream();
+			byte[] buf = new byte[BUFFER_SIZE];
+			ByteBuffer ret = ByteBuffer.wrap(buf);
+			if(buf.length != length)
+			{
+				LOG.error("Bytes Received is not enough! Received: " + buf.length + ", wanted: " + length);
+			}
+			return ret;
+		} catch (URISyntaxException e) {
+			LOG.error("URI syntax error.");
+			e.printStackTrace();
+		} finally{
+			if(connection != null)
+				connection.disconnect();
+		}
+		return null;
+	}
 
   @Override
   public void seek(long pos) throws IOException {

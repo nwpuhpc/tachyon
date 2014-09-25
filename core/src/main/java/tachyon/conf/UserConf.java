@@ -25,10 +25,9 @@ public class UserConf extends Utils {
   public final int FILE_BUFFER_BYTES;
   public final long HEARTBEAT_INTERVAL_MS;
   public final long MASTER_CLIENT_TIMEOUT_MS;
-
   public final long DEFAULT_BLOCK_SIZE_BYTE;
-
   public final int REMOTE_READ_BUFFER_SIZE_BYTE;
+  public final boolean USE_RDMA;
 
   private UserConf() {
     FAILED_SPACE_REQUEST_LIMITS = getIntProperty("tachyon.user.failed.space.request.limits", 3);
@@ -41,5 +40,6 @@ public class UserConf extends Utils {
     DEFAULT_BLOCK_SIZE_BYTE = getLongProperty("tachyon.user.default.block.size.byte", Constants.GB);
     REMOTE_READ_BUFFER_SIZE_BYTE =
         getIntProperty("tachyon.user.remote.read.buffer.size.byte", Constants.MB);
+    USE_RDMA = getBooleanProperty("tachyon.user.remote.use.rdma", false);
   }
 }

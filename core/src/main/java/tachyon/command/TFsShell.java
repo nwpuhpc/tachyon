@@ -21,6 +21,7 @@ import tachyon.client.ReadType;
 import tachyon.client.TachyonFS;
 import tachyon.client.TachyonFile;
 import tachyon.client.WriteType;
+import tachyon.conf.UserConf;
 import tachyon.thrift.ClientBlockInfo;
 import tachyon.thrift.ClientFileInfo;
 import tachyon.util.CommonUtils;
@@ -165,6 +166,11 @@ public class TFsShell implements Closeable {
     if (argv.length != 3) {
       System.out.println("Usage: tfs copyToLocal <src> <localdst>");
       return -1;
+    }
+    
+    if(UserConf.get().USE_RDMA)
+    {
+    	System.out.println("Ready to receive using RDMA.");
     }
 
     TachyonURI srcPath = new TachyonURI(argv[1]);

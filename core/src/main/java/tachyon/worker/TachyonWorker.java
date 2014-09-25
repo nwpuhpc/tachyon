@@ -24,6 +24,7 @@ import tachyon.thrift.NetAddress;
 import tachyon.thrift.WorkerService;
 import tachyon.util.CommonUtils;
 import tachyon.util.NetworkUtils;
+import tachyon.worker.jxio.JXIODataServer;
 import tachyon.worker.netty.NettyDataServer;
 import tachyon.worker.nio.NIODataServer;
 
@@ -200,6 +201,8 @@ public class TachyonWorker implements Runnable {
         return new NIODataServer(dataAddress, blockLocker);
       case NETTY:
         return new NettyDataServer(dataAddress, blockLocker);
+      case JXIO:
+    	  return new JXIODataServer(dataAddress, blockLocker);
       default:
         throw new AssertionError("Unknown network type: " + WorkerConf.get().NETWORK_TYPE);
     }

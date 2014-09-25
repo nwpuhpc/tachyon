@@ -49,4 +49,5 @@ public class Constants {
    * Version 3 [0.6.0] Add lastModificationTimeMs to inode.
    */
   public static final int JOURNAL_VERSION = 2;
+  public static final String NAME_BLOCK_ID = "block_id";
 }
