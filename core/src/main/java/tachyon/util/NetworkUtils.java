@@ -7,6 +7,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
 import java.net.ServerSocket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Enumeration;
 
@@ -74,6 +75,35 @@ public final class NetworkUtils {
       throw Throwables.propagate(e);
     }
   }
+  
+	public static String getLocalInfibandIpAddress() {
+		try {
+			Enumeration<NetworkInterface> interfaces = java.net.NetworkInterface
+					.getNetworkInterfaces();
+			while (interfaces.hasMoreElements()) {
+				NetworkInterface ni = interfaces.nextElement();
+				String nicName = ni.getName();
+				if (nicName.startsWith("ib")) {
+					LOG.info("[Infiniband Found]Select interface " + nicName
+							+ " as InfiniBand");
+					Enumeration<InetAddress> addresses = ni.getInetAddresses();
+					while (addresses.hasMoreElements()) {
+						InetAddress address = addresses.nextElement();
+						if (!address.isLinkLocalAddress()
+								&& !address.isLoopbackAddress()
+								&& (address instanceof Inet4Address)) {
+							return address.getHostAddress();
+						}
+					}
+				}
+			}
+			LOG.error("Infiniband interface with IPv4 address NOT FOUND.");
+			return null;
+		} catch (SocketException e) {
+			LOG.error(e.getMessage(), e);
+		}
+		return null;
+	}
 
   /**
    * Replace and resolve the hostname in a given address or path string.

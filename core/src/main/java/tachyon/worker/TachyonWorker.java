@@ -1,8 +1,12 @@
 package tachyon.worker;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Enumeration;
 
 import org.apache.thrift.server.TServer;
 import org.apache.thrift.server.TThreadedSelectorServer;
@@ -106,9 +110,12 @@ public class TachyonWorker implements Runnable {
 
     WorkerConf wConf = WorkerConf.get();
 
-    String resolvedWorkerHost = NetworkUtils.getLocalHostName();
+    //String resolvedWorkerHost = NetworkUtils.getLocalHostName();
+    String resolvedWorkerHost = NetworkUtils.getLocalInfibandIpAddress();
+    
+    
     LOG.info("Resolved local TachyonWorker host to " + resolvedWorkerHost);
-
+    
     TachyonWorker worker =
         TachyonWorker.createWorker(getMasterLocation(args), resolvedWorkerHost + ":" + wConf.PORT,
             wConf.DATA_PORT, wConf.SELECTOR_THREADS, wConf.QUEUE_SIZE_PER_SELECTOR,
