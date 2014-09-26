@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
+import com.mellanox.jxio.ServerPortal;
 import com.mellanox.jxio.jxioConnection.JxioConnectionServer;
 
 import tachyon.Constants;
@@ -26,6 +27,8 @@ public class JXIODataServer implements DataServer {
 	private InetSocketAddress mAddress;
 	private BlocksLocker mBlockLocker;
 	private JxioConnectionServer mServer;
+	private int mPort;
+	private boolean mIsClosed = false;
 	
 	
 	public JXIODataServer(InetSocketAddress address, BlocksLocker locker) {
@@ -38,7 +41,10 @@ public class JXIODataServer implements DataServer {
 		try {
 		    URI uri = new URI(uriString);
 		    //TODO Parameterize the numworkers.
-			mServer = new JxioConnectionServer(uri, 4, new ServerCallBack());
+			mServer = new JxioConnectionServer(uri, 4, new ServerCallBack(mBlockLocker));
+			URI listenerUri = mServer.getListenerUri();
+			mPort = listenerUri.getPort();
+			LOG.info("DataServer @ Port "+mPort);
 			mServer.start();
 		} catch (URISyntaxException e1) {
 			LOG.error("URI Syntax Error", e1);
@@ -47,20 +53,18 @@ public class JXIODataServer implements DataServer {
 
 	@Override
 	public void close() throws IOException {
-		// TODO Auto-generated method stub
-
+		mServer.disconnect();
+		mIsClosed = true;
 	}
 
 	@Override
 	public int getPort() {
-		// TODO Auto-generated method stub
-		return 0;
+		return mPort;
 	}
 
 	@Override
 	public boolean isClosed() {
-		// TODO Auto-generated method stub
-		return false;
+		return mIsClosed;
 	}
 
 }

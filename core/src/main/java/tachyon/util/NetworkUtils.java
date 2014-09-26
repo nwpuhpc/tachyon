@@ -40,6 +40,18 @@ public final class NetworkUtils {
       throw Throwables.propagate(e);
     }
   }
+  
+  /**
+   * @return the local Infiniband host name, which is not based on a loopback ip address.
+   */
+  public static String getLocalInfinibandHostName() {
+    try {
+      return InetAddress.getByName(getLocalInfibandIpAddress()).getCanonicalHostName();
+    } catch (UnknownHostException e) {
+      LOG.error(e.getMessage(), e);
+      throw Throwables.propagate(e);
+    }
+  }
 
   /**
    * @return the local ip address, which is not a loopback address.

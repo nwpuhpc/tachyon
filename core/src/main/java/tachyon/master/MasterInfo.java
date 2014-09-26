@@ -1677,10 +1677,13 @@ public class MasterInfo extends ImageWriter {
       } else {
         for (NetAddress address : mWorkerAddressToId.keySet()) {
           InetAddress inetAddress = InetAddress.getByName(address.getMHost());
+          LOG.debug("Host " + address.getMHost() + ", with ip: " + inetAddress.getHostAddress());
           if (inetAddress.getHostName().equals(host) || inetAddress.getHostAddress().equals(host)
               || inetAddress.getCanonicalHostName().equals(host)) {
             LOG.debug("getLocalWorker: {}" + address);
             return address;
+          }else{
+        	LOG.debug("is not local worker, due to not equals to " + host);  
           }
         }
       }

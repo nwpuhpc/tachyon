@@ -165,18 +165,20 @@ public class WorkerClient implements Closeable {
   private synchronized boolean connect() throws IOException {
     if (!mConnected) {
       NetAddress workerNetAddress = null;
-      try {
-        String localHostName = NetworkUtils.getLocalHostName();
-        LOG.info("Trying to get local worker host : " + localHostName);
-        workerNetAddress = mMasterClient.user_getWorker(false, localHostName);
-        mIsLocal = true;
-      } catch (NoWorkerException e) {
-        LOG.info(e.getMessage());
-        workerNetAddress = null;
-      } catch (UnknownHostException e) {
-        LOG.error(e.getMessage(), e);
-        workerNetAddress = null;
-      }
+
+		try {
+			String localHostName = NetworkUtils.getLocalInfinibandHostName();
+			LOG.info("Trying to get local infiniband worker host : " + localHostName);
+			workerNetAddress = mMasterClient.user_getWorker(false,
+					localHostName);
+			mIsLocal = true;
+		} catch (NoWorkerException e) {
+			LOG.info(e.getMessage());
+			workerNetAddress = null;
+		} catch (UnknownHostException e) {
+			LOG.error(e.getMessage(), e);
+			workerNetAddress = null;
+		}
 
       if (workerNetAddress == null) {
         try {
