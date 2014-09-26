@@ -308,10 +308,15 @@ public class RemoteBlockInStream extends BlockInStream {
 			connection = new JxioConnection(uri);
 			InputStream is = connection.getInputStream();
 			byte[] buf = new byte[BUFFER_SIZE];
+			int readLen = is.read(buf);
+			if(readLen != length)
+			{
+				LOG.error("Bytes Received is not correct! Received: " + buf.length + ", wanted: " + length);
+			}
 			ByteBuffer ret = ByteBuffer.wrap(buf);
 			if(buf.length != length)
 			{
-				LOG.error("Bytes Received is not enough! Received: " + buf.length + ", wanted: " + length);
+				LOG.error("Wrapped bytebuffer's length is incorrect! ByteBuffer: " + buf.length + ", wanted: " + length);
 			}
 			return ret;
 		} catch (URISyntaxException e) {
