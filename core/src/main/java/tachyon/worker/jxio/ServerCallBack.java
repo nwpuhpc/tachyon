@@ -25,7 +25,7 @@ import com.mellanox.jxio.jxioConnection.JxioConnectionServer.Callbacks;
 public class ServerCallBack implements Callbacks {
 	private static final Logger LOG = LoggerFactory
 			.getLogger(Constants.LOGGER_TYPE);
-	
+
 	private BlocksLocker mBlockLocker;
 
 	public ServerCallBack(BlocksLocker blockLocker) {
@@ -70,8 +70,9 @@ public class ServerCallBack implements Callbacks {
 		long blockId = Long.valueOf(params.get(JxioConstants.NAME_BLOCK_ID));
 		long offset = Long.valueOf(params.get(JxioConstants.NAME_OFFSET));
 		long length = Long.valueOf(params.get(JxioConstants.NAME_LENGTH));
-		
-		LOG.debug(String.format("Transfering %s bytes at block %s.", length, blockId));
+
+		LOG.debug(String.format("Transfering %s bytes at block %s.", length,
+				blockId));
 
 		try {
 			if (offset < 0) {
@@ -84,9 +85,9 @@ public class ServerCallBack implements Callbacks {
 
 			String filePath = CommonUtils.concat(WorkerConf.get().DATA_FOLDER,
 					blockId);
-			
+
 			int lockId = mBlockLocker.lock(blockId);
-			
+
 			LOG.info("Try to response remote request by reading from "
 					+ filePath);
 			RandomAccessFile file = new RandomAccessFile(filePath, "r");
@@ -115,19 +116,28 @@ public class ServerCallBack implements Callbacks {
 			// channel.map(FileChannel.MapMode.READ_ONLY,
 			// offset, length);
 
-			byte[] content = new byte[(int) fileLength];
-			
+			byte[] content = new byte[(int) fileLength + 10];
+			int bytesReaded = file.read(content, (int) offset, (int) length);
+			if (bytesReaded != length) {
+				LOG.error("Want to read " + length
+						+ " bytes but actually readed " + bytesReaded
+						+ " bytes.");
+			}
+//			String contentStr = new String(content, 0, bytesReaded, "UTF8");
+//			LOG.info("Content size " + bytesReaded + "; contentStr Size: " + contentStr.length());
+//			LOG.info("CONTENT: **** " + contentStr);
 			os.write(content);
-			
-			// channel.close();
+			os.close();
 			file.close();
-			
+
 			mBlockLocker.unlock(blockId, lockId);
-			
-			LOG.info("Successfully sending " + content.length + " bytes to the remote peer.");
-			
+
+			LOG.info("Successfully sending " + content.length
+					+ " bytes to the remote peer.");
+
 		} catch (Exception e) {
-			LOG.error("Failed to transfer requested data : " + e.getMessage(), e);
+			LOG.error("Failed to transfer requested data : " + e.getMessage(),
+					e);
 		}
 	}
 }

@@ -311,12 +311,14 @@ public class RemoteBlockInStream extends BlockInStream {
 			int readLen = is.read(buf);
 			if(readLen != length)
 			{
-				LOG.error("Bytes Received is not correct! Received: " + buf.length + ", wanted: " + length);
+				LOG.error("Bytes Received is not correct! Received: " + readLen + ", wanted: " + length);
 			}
-			ByteBuffer ret = ByteBuffer.wrap(buf);
-			if(buf.length != length)
+//			String content = new String(buf, 0, readLen, "UTF8");
+//			LOG.info("Content received: " + content);
+			ByteBuffer ret = ByteBuffer.wrap(buf, 0, readLen);
+			if(ret.limit() != length)
 			{
-				LOG.error("Wrapped bytebuffer's length is incorrect! ByteBuffer: " + buf.length + ", wanted: " + length);
+				LOG.error("Wrapped bytebuffer's length is incorrect! ByteBuffer: " + ret.limit() + ", wanted: " + length);
 			}
 			return ret;
 		} catch (URISyntaxException e) {
