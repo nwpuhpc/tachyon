@@ -40,8 +40,8 @@ public abstract class BlockInStream extends InStream {
     if (buf != null) {
       return new LocalBlockInStream(tachyonFile, readType, blockIndex, buf);
     }
-
-    return new RemoteBlockInStream(tachyonFile, readType, blockIndex, ufsConf);
+    //TODO
+    return new RemoteRDMABlockInStream(tachyonFile, readType, blockIndex, ufsConf);
   }
 
   protected final int mBlockIndex;
