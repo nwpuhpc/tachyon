@@ -116,7 +116,7 @@ public class ServerCallBack implements Callbacks {
 			// channel.map(FileChannel.MapMode.READ_ONLY,
 			// offset, length);
 
-			byte[] content = new byte[(int) fileLength + 10];
+			byte[] content = new byte[(int) length + 10];
 			int bytesReaded = file.read(content, (int) offset, (int) length);
 			if (bytesReaded != length) {
 				LOG.error("Want to read " + length
@@ -126,13 +126,13 @@ public class ServerCallBack implements Callbacks {
 //			String contentStr = new String(content, 0, bytesReaded, "UTF8");
 //			LOG.info("Content size " + bytesReaded + "; contentStr Size: " + contentStr.length());
 //			LOG.info("CONTENT: **** " + contentStr);
-			os.write(content);
+			os.write(content, 0, bytesReaded);
 			os.close();
 			file.close();
 
 			mBlockLocker.unlock(blockId, lockId);
 
-			LOG.info("Successfully sending " + content.length
+			LOG.info("Successfully sending " + bytesReaded
 					+ " bytes to the remote peer.");
 
 		} catch (Exception e) {
