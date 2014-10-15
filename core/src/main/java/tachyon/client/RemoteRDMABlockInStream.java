@@ -103,7 +103,7 @@ public class RemoteRDMABlockInStream extends BlockInStream {
 		}
 
 		conn = connectRdma(new InetSocketAddress(mHost, mPort),
-				mBlockInfo.blockId, mBlockInfo.offset, mBlockInfo.length);
+				mBlockInfo.blockId, 0, mBlockInfo.length);
 		inputStream = conn.getInputStream();
 
 		mUFSConf = ufsConf;
