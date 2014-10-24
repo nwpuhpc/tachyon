@@ -13,13 +13,6 @@
 	<description>Tachyon: A Reliable Memory Centric Distributed Storage System</description>
 	<name>Tachyon Project Core</name>
 
-	<repositories>
-		<repository>
-			<id>my-local-repo</id>
-			<url>file://${basedir}/true</url>
-		</repository>
-	</repositories>
-
 	<dependencies>
 		<dependency>
 			<groupId>jxio</groupId>

@@ -27,6 +27,10 @@ public class ServerCallBack implements Callbacks {
 			.getLogger(Constants.LOGGER_TYPE);
 
 	private BlocksLocker mBlockLocker;
+	
+	// Reasonable buffer size.
+	private final static int bufSize = 32*1024;
+	private final static byte[] buffer = new byte[bufSize]; 
 
 	public ServerCallBack(BlocksLocker blockLocker) {
 		mBlockLocker = blockLocker;
@@ -116,25 +120,26 @@ public class ServerCallBack implements Callbacks {
 			// channel.map(FileChannel.MapMode.READ_ONLY,
 			// offset, length);
 
-			byte[] content = new byte[(int) length + 10];
-			int bytesReaded = file.read(content, (int) offset, (int) length);
-			if (bytesReaded != length) {
+			file.seek(offset);			
+			long readCount = 0;
+			int bytesReaded = file.read(buffer);
+			while(bytesReaded != -1){
+				readCount += bytesReaded;
+				os.write(buffer, 0, bytesReaded);
+				bytesReaded = file.read(buffer);
+			}
+			if (readCount != length) {
 				LOG.error("Want to read " + length
 						+ " bytes but actually readed " + bytesReaded
 						+ " bytes.");
 			}
-//			String contentStr = new String(content, 0, bytesReaded, "UTF8");
-//			LOG.info("Content size " + bytesReaded + "; contentStr Size: " + contentStr.length());
-//			LOG.info("CONTENT: **** " + contentStr);
-			os.write(content, 0, bytesReaded);
 			os.close();
 			file.close();
 
 			mBlockLocker.unlock(blockId, lockId);
 
-			LOG.info("Successfully sending " + bytesReaded
+			LOG.info("Successfully sending " + readCount
 					+ " bytes to the remote peer.");
-
 		} catch (Exception e) {
 			LOG.error("Failed to transfer requested data : " + e.getMessage(),
 					e);
